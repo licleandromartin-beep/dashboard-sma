@@ -1,3 +1,5 @@
+"use client";
+
 import dynamic from "next/dynamic";
 
 const CamposClient = dynamic(() => import("@/components/CamposClient"), {

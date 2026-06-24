@@ -1,3 +1,5 @@
+"use client";
+
 import dynamic from "next/dynamic";
 
 const ComercialClient = dynamic(() => import("@/components/ComercialClient"), {
