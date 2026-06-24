@@ -85,7 +85,7 @@ export default function DepartamentosClient() {
         <DataTable
           title="Índices por Estado/Categoría"
           columns={indiceColumns}
-          rows={indices.map((i) => ({
+          rows={indices.filter((i) => i.categoria !== "Promedio").map((i) => ({
             categoria: i.categoria,
             cantidad: i.cantidad,
             precio_m2_avg: fmt(i.precio_m2_avg),
