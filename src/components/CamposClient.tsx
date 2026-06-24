@@ -3,47 +3,21 @@
 import { useEffect, useState } from "react";
 import MetricCard from "@/components/MetricCard";
 import DataTable, { Column } from "@/components/DataTable";
-import { getMetrics, getByBarrio, MetricResult, BarrioRow } from "@/lib/queries";
-import { supabase } from "@/lib/supabase";
+import { getMetrics, getByBarrio, getBySize, MetricResult, BarrioRow } from "@/lib/queries";
 
 const fmt = (n: number) => n > 0 ? `$${n.toLocaleString("es-AR")}` : "—";
 
 export default function CamposClient() {
   const [metrics, setMetrics] = useState<MetricResult | null>(null);
   const [barrios, setBarrios] = useState<BarrioRow[]>([]);
-  const [sizes, setSizes] = useState<{ label: string; count: number; avgPricePerHa: number }[]>([]);
+  const [sizes, setSizes] = useState<{ label: string; count: number; avgPricePerM2: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       getMetrics("campo"),
       getByBarrio("campo"),
-      supabase
-        .from("inmuebles")
-        .select("m2_totales, precio")
-        .eq("tipo_propiedad", "campo")
-        .eq("activo", true)
-        .eq("moneda", "USD")
-        .not("precio", "is", null)
-        .not("m2_totales", "is", null)
-        .then(({ data }) => {
-          if (!data) return [];
-          const ranges: [number, number, string][] = [
-            [0, 100000, "<10 ha"],
-            [100000, 500000, "10-50 ha"],
-            [500000, 1000000, "50-100 ha"],
-            [1000000, Infinity, ">100 ha"],
-          ];
-          return ranges.map(([min, max, label]) => {
-            const filtered = data.filter((d) => Number(d.m2_totales) >= min && Number(d.m2_totales) < max);
-            const haValues = filtered.map((d) => (Number(d.precio) / Number(d.m2_totales)) * 10000);
-            return {
-              label,
-              count: filtered.length,
-              avgPricePerHa: haValues.length > 0 ? Math.round(haValues.reduce((a, b) => a + b, 0) / haValues.length) : 0,
-            };
-          });
-        }),
+      getBySize("campo", [[0, 100000], [100000, 500000], [500000, 1000000], [1000000, Infinity]]),
     ]).then(([m, b, s]) => {
       setMetrics(m);
       setBarrios(b);
@@ -56,6 +30,7 @@ export default function CamposClient() {
 
   const avgPricePerHa = metrics && metrics.avgPricePerM2 > 0 ? Math.round(metrics.avgPricePerM2 * 10000) : 0;
 
+  const sizeLabels = ["<10 ha", "10-50 ha", "50-100 ha", ">100 ha"];
   const sizeColumns: Column[] = [
     { key: "label", label: "Tamaño campo" },
     { key: "count", label: "Ofertas", align: "right" },
@@ -88,10 +63,10 @@ export default function CamposClient() {
         <DataTable
           title="Precios por Tamaño Campo"
           columns={sizeColumns}
-          rows={sizes.map((s) => ({
-            label: s.label,
+          rows={sizes.map((s, i) => ({
+            label: sizeLabels[i] || s.label,
             count: s.count,
-            avgPricePerHa: fmt(s.avgPricePerHa),
+            avgPricePerHa: fmt(s.avgPricePerM2 > 0 ? Math.round(s.avgPricePerM2 * 10000) : 0),
           }))}
         />
         {barrios.length > 0 && (

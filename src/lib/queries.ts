@@ -33,18 +33,36 @@ export interface IndiceRow {
   cantidad: number;
 }
 
-export async function getMetrics(tipo: PropertyType): Promise<MetricResult> {
-  const { data, error } = await supabase
-    .from("inmuebles")
-    .select("precio, precio_por_m2, m2_totales")
-    .eq("tipo_propiedad", tipo)
-    .eq("activo", true)
-    .eq("moneda", "USD")
-    .not("precio", "is", null)
-    .not("precio_por_m2", "is", null);
+async function fetchAll(tipo: PropertyType, fields: string) {
+  const all: Record<string, unknown>[] = [];
+  let from = 0;
+  const pageSize = 1000;
+  while (true) {
+    const { data, error } = await supabase
+      .from("inmuebles")
+      .select(fields)
+      .eq("tipo_propiedad", tipo)
+      .eq("activo", true)
+      .range(from, from + pageSize - 1);
+    if (error) {
+      console.error("Supabase error:", error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return all;
+}
 
-  console.log("getMetrics result:", { tipo, error, dataLength: data?.length });
-  if (error || !data || data.length === 0) {
+export async function getMetrics(tipo: PropertyType): Promise<MetricResult> {
+  const all = await fetchAll(tipo, "precio, precio_por_m2, m2_totales, moneda");
+  const data = all.filter(
+    (d) => d.moneda === "USD" && d.precio && d.precio_por_m2
+  );
+
+  if (data.length === 0) {
     return { count: 0, avgPrice: 0, medianPrice: 0, avgPricePerM2: 0, medianPricePerM2: 0 };
   }
 
@@ -68,17 +86,10 @@ export async function getMetrics(tipo: PropertyType): Promise<MetricResult> {
 }
 
 export async function getByBarrio(tipo: PropertyType): Promise<BarrioRow[]> {
-  const { data, error } = await supabase
-    .from("inmuebles")
-    .select("barrio, precio, precio_por_m2, m2_totales")
-    .eq("tipo_propiedad", tipo)
-    .eq("activo", true)
-    .eq("moneda", "USD")
-    .not("precio", "is", null)
-    .not("precio_por_m2", "is", null)
-    .not("barrio", "is", null);
-
-  if (error || !data) return [];
+  const all = await fetchAll(tipo, "barrio, precio, precio_por_m2, m2_totales, moneda");
+  const data = all.filter(
+    (d) => d.moneda === "USD" && d.precio && d.precio_por_m2 && d.barrio
+  );
 
   const grouped: Record<string, { prices: number[]; pricesM2: number[]; m2s: number[] }> = {};
   for (const row of data) {
@@ -86,7 +97,7 @@ export async function getByBarrio(tipo: PropertyType): Promise<BarrioRow[]> {
     if (!grouped[b]) grouped[b] = { prices: [], pricesM2: [], m2s: [] };
     grouped[b].prices.push(Number(row.precio));
     grouped[b].pricesM2.push(Number(row.precio_por_m2));
-    grouped[b].m2s.push(Number(row.m2_totales));
+    grouped[b].m2s.push(Number(row.m2_totales || 0));
   }
 
   return Object.entries(grouped)
@@ -102,17 +113,10 @@ export async function getByBarrio(tipo: PropertyType): Promise<BarrioRow[]> {
 }
 
 export async function getByAmbientes(): Promise<AmbientesRow[]> {
-  const { data, error } = await supabase
-    .from("inmuebles")
-    .select("ambientes, precio, precio_por_m2")
-    .eq("tipo_propiedad", "departamento")
-    .eq("activo", true)
-    .eq("moneda", "USD")
-    .not("precio", "is", null)
-    .not("precio_por_m2", "is", null)
-    .not("ambientes", "is", null);
-
-  if (error || !data) return [];
+  const all = await fetchAll("departamento", "ambientes, precio, precio_por_m2, moneda");
+  const data = all.filter(
+    (d) => d.moneda === "USD" && d.precio && d.precio_por_m2 && d.ambientes
+  );
 
   const grouped: Record<number, { prices: number[]; pricesM2: number[] }> = {};
   for (const row of data) {
@@ -159,17 +163,10 @@ export async function getIndices(): Promise<IndiceRow[]> {
 }
 
 export async function getBySize(tipo: PropertyType, ranges: [number, number][]): Promise<{ label: string; count: number; avgPricePerM2: number }[]> {
-  const { data, error } = await supabase
-    .from("inmuebles")
-    .select("m2_totales, precio, precio_por_m2")
-    .eq("tipo_propiedad", tipo)
-    .eq("activo", true)
-    .eq("moneda", "USD")
-    .not("precio", "is", null)
-    .not("precio_por_m2", "is", null)
-    .not("m2_totales", "is", null);
-
-  if (error || !data) return [];
+  const all = await fetchAll(tipo, "m2_totales, precio, precio_por_m2, moneda");
+  const data = all.filter(
+    (d) => d.moneda === "USD" && d.precio && d.precio_por_m2 && d.m2_totales
+  );
 
   return ranges.map(([min, max]) => {
     const label = max === Infinity ? `>${min.toLocaleString()} m²` : `${min.toLocaleString()}-${max.toLocaleString()} m²`;

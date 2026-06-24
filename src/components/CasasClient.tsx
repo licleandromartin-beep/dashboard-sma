@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import MetricCard from "@/components/MetricCard";
 import DataTable, { Column } from "@/components/DataTable";
 import { getMetrics, getByBarrio, getBySize, MetricResult, BarrioRow } from "@/lib/queries";
-import { supabase } from "@/lib/supabase";
 
 const fmt = (n: number) => n > 0 ? `$${n.toLocaleString("es-AR")}` : "—";
 
@@ -12,7 +11,6 @@ export default function CasasClient() {
   const [metrics, setMetrics] = useState<MetricResult | null>(null);
   const [barrios, setBarrios] = useState<BarrioRow[]>([]);
   const [sizes, setSizes] = useState<{ label: string; count: number; avgPricePerM2: number }[]>([]);
-  const [avgM2Construido, setAvgM2Construido] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,24 +18,10 @@ export default function CasasClient() {
       getMetrics("casa"),
       getByBarrio("casa"),
       getBySize("casa", [[0, 500], [500, 1000], [1000, 2000], [2000, Infinity]]),
-      supabase
-        .from("inmuebles")
-        .select("m2_cubiertos")
-        .eq("tipo_propiedad", "casa")
-        .eq("activo", true)
-        .not("m2_cubiertos", "is", null)
-        .then(({ data }) => {
-          if (data && data.length > 0) {
-            const vals = data.map((d) => Number(d.m2_cubiertos));
-            return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
-          }
-          return 0;
-        }),
-    ]).then(([m, b, s, avgCub]) => {
+    ]).then(([m, b, s]) => {
       setMetrics(m);
       setBarrios(b);
       setSizes(s);
-      setAvgM2Construido(avgCub);
       setLoading(false);
     });
   }, []);
@@ -67,7 +51,6 @@ export default function CasasClient() {
         <MetricCard label="Precio promedio" value={fmt(metrics?.avgPrice ?? 0)} sub="USD" />
         <MetricCard label="Mediana precio" value={fmt(metrics?.medianPrice ?? 0)} sub="USD" />
         <MetricCard label="Stock activo" value={String(metrics?.count ?? 0)} sub="Ofertas en Zonaprop" />
-        <MetricCard label="m² construido prom." value={avgM2Construido > 0 ? `${avgM2Construido} m²` : "—"} sub="Promedio casas" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
