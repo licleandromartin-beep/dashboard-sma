@@ -1,32 +1,18 @@
-export default function DepartamentosPage() {
+export default function ComercialPage() {
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-zinc-900">Departamentos</h2>
+      <h2 className="text-2xl font-bold text-zinc-900">Locales Comerciales</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Precio promedio $/m²" value="—" sub="Zonaprop" />
-        <MetricCard label="Precio mediano $/m²" value="—" sub="Zonaprop" />
-        <MetricCard label="Precio cierre $/m²" value="—" sub="Encuesta" />
-        <MetricCard label="Gap publicado vs cierre" value="—" sub="n < 5" />
-        <MetricCard label="Stock activo" value="—" sub="Ofertas Zonaprop" />
-        <MetricCard label="Respuestas encuesta" value="—" sub="Últimos 30 días" />
+        <MetricCard label="Gap publicado vs cierre" value="—" sub="Datos insuficientes" />
         <MetricCard label="Variación 30d" value="—" sub="Índice temporal" />
-        <MetricCard label="Velocidad venta" value="—" sub="Días promedio" />
+        <MetricCard label="Tamaño promedio" value="—" sub="m² local" />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <TablePlaceholder title="Precios por Ambientes" />
-        <TablePlaceholder title="Precios por Estado" />
-      </div>
+      <TablePlaceholder title="Precios por Ubicación" />
 
-      <TablePlaceholder title="Análisis por Zona" />
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <ChartPlaceholder title="Mapa interactivo" />
-        <ChartPlaceholder title="Scatter: Publicado vs Cierre" />
-        <ChartPlaceholder title="Scatter: Ambientes vs $/m²" />
-        <ChartPlaceholder title="Distribución por zona" />
-      </div>
+      <ChartPlaceholder title="Mapa: Ubicación + precio/m²" />
     </div>
   );
 }

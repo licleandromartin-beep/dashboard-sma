@@ -1,31 +1,26 @@
-export default function DepartamentosPage() {
+export default function CasasPage() {
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-zinc-900">Departamentos</h2>
+      <h2 className="text-2xl font-bold text-zinc-900">Casas</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Precio promedio $/m²" value="—" sub="Zonaprop" />
-        <MetricCard label="Precio mediano $/m²" value="—" sub="Zonaprop" />
-        <MetricCard label="Precio cierre $/m²" value="—" sub="Encuesta" />
+        <MetricCard label="Precio $/m² construido" value="—" sub="Zonaprop" />
+        <MetricCard label="Precio $/m² terreno" value="—" sub="Zonaprop" />
+        <MetricCard label="Precio total promedio" value="—" sub="~150 m² construido" />
         <MetricCard label="Gap publicado vs cierre" value="—" sub="n < 5" />
-        <MetricCard label="Stock activo" value="—" sub="Ofertas Zonaprop" />
-        <MetricCard label="Respuestas encuesta" value="—" sub="Últimos 30 días" />
         <MetricCard label="Variación 30d" value="—" sub="Índice temporal" />
-        <MetricCard label="Velocidad venta" value="—" sub="Días promedio" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <TablePlaceholder title="Precios por Ambientes" />
-        <TablePlaceholder title="Precios por Estado" />
+        <TablePlaceholder title="Precios por Tamaño Terreno" />
+        <TablePlaceholder title="Análisis por Zona" />
       </div>
-
-      <TablePlaceholder title="Análisis por Zona" />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ChartPlaceholder title="Mapa interactivo" />
-        <ChartPlaceholder title="Scatter: Publicado vs Cierre" />
-        <ChartPlaceholder title="Scatter: Ambientes vs $/m²" />
-        <ChartPlaceholder title="Distribución por zona" />
+        <ChartPlaceholder title="Scatter: Tamaño terreno vs precio" />
+        <ChartPlaceholder title="Scatter: m² construido vs precio" />
+        <ChartPlaceholder title="Box plot por zona" />
       </div>
     </div>
   );
