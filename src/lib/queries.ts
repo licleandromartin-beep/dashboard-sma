@@ -43,6 +43,7 @@ export async function getMetrics(tipo: PropertyType): Promise<MetricResult> {
     .not("precio", "is", null)
     .not("precio_por_m2", "is", null);
 
+  console.log("getMetrics result:", { tipo, error, dataLength: data?.length });
   if (error || !data || data.length === 0) {
     return { count: 0, avgPrice: 0, medianPrice: 0, avgPricePerM2: 0, medianPricePerM2: 0 };
   }
