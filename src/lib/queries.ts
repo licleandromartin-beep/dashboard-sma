@@ -47,7 +47,7 @@ async function fetchAll(tipo: PropertyType, fields: string): Promise<any[]> {
       .eq("activo", true)
       .range(from, from + pageSize - 1);
     if (error) {
-      console.error("Supabase error:", error);
+      console.error("Supabase error:", JSON.stringify(error), "tipo:", tipo, "fields:", fields);
       break;
     }
     if (!data || data.length === 0) break;
