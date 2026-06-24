@@ -138,12 +138,19 @@ export async function getByAmbientes(): Promise<AmbientesRow[]> {
     .sort((a, b) => a.ambientes - b.ambientes);
 }
 
-export async function getIndices(): Promise<IndiceRow[]> {
-  const { data, error } = await supabase
+export async function getIndices(tipo?: PropertyType): Promise<IndiceRow[]> {
+  let query = supabase
     .from("indices_precio")
     .select("categoria, precio_m2_avg, precio_m2_med, precio_avg, cantidad")
-    .order("fecha", { ascending: false })
-    .limit(10);
+    .order("fecha", { ascending: false });
+
+  if (tipo) {
+    query = query.eq("tipo_propiedad", tipo);
+  } else {
+    query = query.is("tipo_propiedad", null).is("barrio", null);
+  }
+
+  const { data, error } = await query.limit(20);
 
   if (error || !data) return [];
 

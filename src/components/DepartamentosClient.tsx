@@ -20,7 +20,7 @@ export default function DepartamentosClient() {
       getMetrics("departamento"),
       getByBarrio("departamento"),
       getByAmbientes(),
-      getIndices(),
+      getIndices("departamento"),
     ]).then(([m, b, a, i]) => {
       setMetrics(m);
       setBarrios(b);

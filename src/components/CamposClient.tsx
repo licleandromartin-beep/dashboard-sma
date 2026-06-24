@@ -17,7 +17,7 @@ export default function CamposClient() {
     Promise.all([
       getMetrics("campo"),
       getByBarrio("campo"),
-      getBySize("campo", [[0, 100000], [100000, 500000], [500000, 1000000], [1000000, Infinity]]),
+      getBySize("campo", [[0, 50000], [50000, 100000], [100000, Infinity]]),
     ]).then(([m, b, s]) => {
       setMetrics(m);
       setBarrios(b);
@@ -30,7 +30,7 @@ export default function CamposClient() {
 
   const avgPricePerHa = metrics && metrics.avgPricePerM2 > 0 ? Math.round(metrics.avgPricePerM2 * 10000) : 0;
 
-  const sizeLabels = ["<10 ha", "10-50 ha", "50-100 ha", ">100 ha"];
+  const sizeLabels = ["0-5 ha", "5-10 ha", ">10 ha"];
   const sizeColumns: Column[] = [
     { key: "label", label: "Tamaño campo" },
     { key: "count", label: "Ofertas", align: "right" },
