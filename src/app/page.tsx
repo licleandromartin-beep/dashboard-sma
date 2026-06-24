@@ -1,62 +1,106 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import MetricCard from "@/components/MetricCard";
+import DataTable, { Column } from "@/components/DataTable";
+import { getMetrics, getByBarrio, getByAmbientes, getIndices, MetricResult, BarrioRow, AmbientesRow, IndiceRow } from "@/lib/queries";
+
+const fmt = (n: number) => n > 0 ? `$${n.toLocaleString("es-AR")}` : "—";
+
 export default function DepartamentosPage() {
+  const [metrics, setMetrics] = useState<MetricResult | null>(null);
+  const [barrios, setBarrios] = useState<BarrioRow[]>([]);
+  const [ambientes, setAmbientes] = useState<AmbientesRow[]>([]);
+  const [indices, setIndices] = useState<IndiceRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      getMetrics("departamento"),
+      getByBarrio("departamento"),
+      getByAmbientes(),
+      getIndices(),
+    ]).then(([m, b, a, i]) => {
+      setMetrics(m);
+      setBarrios(b);
+      setAmbientes(a);
+      setIndices(i);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return <p className="text-zinc-400 py-12 text-center">Cargando datos...</p>;
+
+  const barrioColumns: Column[] = [
+    { key: "barrio", label: "Zona" },
+    { key: "count", label: "Ofertas", align: "right" },
+    { key: "avgPricePerM2", label: "$/m² promedio", align: "right" },
+    { key: "avgPrice", label: "Precio promedio", align: "right" },
+    { key: "avgM2", label: "m² prom.", align: "right" },
+  ];
+
+  const ambColumns: Column[] = [
+    { key: "ambientes", label: "Ambientes" },
+    { key: "count", label: "Ofertas", align: "right" },
+    { key: "avgPricePerM2", label: "$/m² promedio", align: "right" },
+    { key: "avgPrice", label: "Precio promedio", align: "right" },
+  ];
+
+  const indiceColumns: Column[] = [
+    { key: "categoria", label: "Categoría" },
+    { key: "cantidad", label: "Cantidad", align: "right" },
+    { key: "precio_m2_avg", label: "$/m² promedio", align: "right" },
+    { key: "precio_m2_med", label: "$/m² mediana", align: "right" },
+    { key: "precio_avg", label: "Precio promedio", align: "right" },
+  ];
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-zinc-900">Departamentos</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Precio promedio $/m²" value="—" sub="Zonaprop" />
-        <MetricCard label="Precio mediano $/m²" value="—" sub="Zonaprop" />
-        <MetricCard label="Precio cierre $/m²" value="—" sub="Encuesta" />
-        <MetricCard label="Gap publicado vs cierre" value="—" sub="n < 5" />
-        <MetricCard label="Stock activo" value="—" sub="Ofertas Zonaprop" />
-        <MetricCard label="Respuestas encuesta" value="—" sub="Últimos 30 días" />
-        <MetricCard label="Variación 30d" value="—" sub="Índice temporal" />
-        <MetricCard label="Velocidad venta" value="—" sub="Días promedio" />
+        <MetricCard label="Precio promedio $/m²" value={fmt(metrics?.avgPricePerM2 ?? 0)} sub="Zonaprop" />
+        <MetricCard label="Precio mediano $/m²" value={fmt(metrics?.medianPricePerM2 ?? 0)} sub="Zonaprop" />
+        <MetricCard label="Precio promedio total" value={fmt(metrics?.avgPrice ?? 0)} sub="USD" />
+        <MetricCard label="Mediana precio total" value={fmt(metrics?.medianPrice ?? 0)} sub="USD" />
+        <MetricCard label="Stock activo" value={String(metrics?.count ?? 0)} sub="Ofertas en Zonaprop" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <TablePlaceholder title="Precios por Ambientes" />
-        <TablePlaceholder title="Precios por Estado" />
+        <DataTable
+          title="Precios por Ambientes"
+          columns={ambColumns}
+          rows={ambientes.map((a) => ({
+            ambientes: `${a.ambientes} amb.`,
+            count: a.count,
+            avgPricePerM2: fmt(a.avgPricePerM2),
+            avgPrice: fmt(a.avgPrice),
+          }))}
+        />
+        <DataTable
+          title="Índices por Estado/Categoría"
+          columns={indiceColumns}
+          rows={indices.map((i) => ({
+            categoria: i.categoria,
+            cantidad: i.cantidad,
+            precio_m2_avg: fmt(i.precio_m2_avg),
+            precio_m2_med: fmt(i.precio_m2_med),
+            precio_avg: fmt(i.precio_avg),
+          }))}
+        />
       </div>
 
-      <TablePlaceholder title="Análisis por Zona" />
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <ChartPlaceholder title="Mapa interactivo" />
-        <ChartPlaceholder title="Scatter: Publicado vs Cierre" />
-        <ChartPlaceholder title="Scatter: Ambientes vs $/m²" />
-        <ChartPlaceholder title="Distribución por zona" />
-      </div>
-    </div>
-  );
-}
-
-function MetricCard({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
-      <p className="text-sm text-zinc-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-zinc-900">{value}</p>
-      <p className="mt-1 text-xs text-zinc-400">{sub}</p>
-    </div>
-  );
-}
-
-function TablePlaceholder({ title }: { title: string }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
-      <h3 className="text-sm font-medium text-zinc-700">{title}</h3>
-      <p className="mt-4 text-center text-sm text-zinc-400 py-8">Sin datos aún</p>
-    </div>
-  );
-}
-
-function ChartPlaceholder({ title }: { title: string }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
-      <h3 className="text-sm font-medium text-zinc-700">{title}</h3>
-      <div className="mt-4 flex h-48 items-center justify-center rounded bg-zinc-50">
-        <p className="text-sm text-zinc-400">Gráfico próximamente</p>
-      </div>
+      <DataTable
+        title="Análisis por Zona"
+        columns={barrioColumns}
+        rows={barrios.map((b) => ({
+          barrio: b.barrio,
+          count: b.count,
+          avgPricePerM2: fmt(b.avgPricePerM2),
+          avgPrice: fmt(b.avgPrice),
+          avgM2: `${b.avgM2} m²`,
+        }))}
+      />
     </div>
   );
 }
