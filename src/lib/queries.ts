@@ -33,8 +33,10 @@ export interface IndiceRow {
   cantidad: number;
 }
 
-async function fetchAll(tipo: PropertyType, fields: string) {
-  const all: Record<string, unknown>[] = [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function fetchAll(tipo: PropertyType, fields: string): Promise<any[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const all: any[] = [];
   let from = 0;
   const pageSize = 1000;
   while (true) {
@@ -49,7 +51,7 @@ async function fetchAll(tipo: PropertyType, fields: string) {
       break;
     }
     if (!data || data.length === 0) break;
-    all.push(...data);
+    for (const row of data) all.push(row);
     if (data.length < pageSize) break;
     from += pageSize;
   }
